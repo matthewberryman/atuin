@@ -21,7 +21,8 @@ if string match -q "4.*" $FISH_VERSION 2>/dev/null
     bind up _atuin_bind_up
 else
     bind -k up _atuin_bind_up 2>/dev/null || bind up _atuin_bind_up
-end"#.to_string();
+end"#
+            .to_string();
 
         let bind_up_arrow_ins = r#"
 # Fish version-aware insert mode key binding - detect version at runtime
@@ -33,7 +34,8 @@ else
     bind -M insert -k up _atuin_bind_up 2>/dev/null || bind -M insert up _atuin_bind_up
     bind -M insert \eOA _atuin_bind_up
     bind -M insert \e\[A _atuin_bind_up
-end"#.to_string();
+end"#
+            .to_string();
 
         if !disable_ctrl_r {
             println!("{BIND_CTRL_R}");
