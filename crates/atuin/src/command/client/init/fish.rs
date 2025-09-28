@@ -11,19 +11,29 @@ pub fn init_static(disable_up_arrow: bool, disable_ctrl_r: bool) {
     if std::env::var("ATUIN_NOBIND").is_err() {
         const BIND_CTRL_R: &str = r"bind \cr _atuin_search";
         const BIND_CTRL_R_INS: &str = r"bind -M insert \cr _atuin_search";
-        const BIND_UP_ARROW_INS: &str = r"bind -M insert -k up _atuin_bind_up
-bind -M insert \eOA _atuin_bind_up
-bind -M insert \e\[A _atuin_bind_up";
 
-        let bind_up_arrow = match std::env::var("FISH_VERSION") {
-            Ok(ref version) if version.starts_with("4.") => r"bind up _atuin_bind_up",
-            Ok(_) => r"bind -k up _atuin_bind_up",
+        // Generate fish-native version detection that works at runtime
+        // This avoids the FISH_VERSION environment variable issue by letting fish itself
+        // determine the version and choose the appropriate binding syntax
+        let bind_up_arrow = r#"
+# Fish version-aware key binding - detect version at runtime
+if string match -q "4.*" $FISH_VERSION 2>/dev/null
+    bind up _atuin_bind_up
+else
+    bind -k up _atuin_bind_up 2>/dev/null || bind up _atuin_bind_up
+end"#.to_string();
 
-            // do nothing - we can't panic or error as this could be in use in
-            // non-fish pipelines
-            _ => "",
-        }
-        .to_string();
+        let bind_up_arrow_ins = r#"
+# Fish version-aware insert mode key binding - detect version at runtime
+if string match -q "4.*" $FISH_VERSION 2>/dev/null
+    bind -M insert up _atuin_bind_up
+    bind -M insert \eOA _atuin_bind_up
+    bind -M insert \e\[A _atuin_bind_up
+else
+    bind -M insert -k up _atuin_bind_up 2>/dev/null || bind -M insert up _atuin_bind_up
+    bind -M insert \eOA _atuin_bind_up
+    bind -M insert \e\[A _atuin_bind_up
+end"#.to_string();
 
         if !disable_ctrl_r {
             println!("{BIND_CTRL_R}");
@@ -41,7 +51,7 @@ bind \e\[A _atuin_bind_up"
             println!("{BIND_CTRL_R_INS}");
         }
         if !disable_up_arrow {
-            println!("{BIND_UP_ARROW_INS}");
+            println!("{bind_up_arrow_ins}");
         }
         println!("end");
     }
